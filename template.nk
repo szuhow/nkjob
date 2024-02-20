@@ -598,12 +598,12 @@ Write {
 Read {
  inputs 0
  file_type exr
- file /PROD/dev/kleks/kleks/kleks/edit/footage/seq/shot/shot.######.exr
+ file path
  format "4448 1856 0 0 4448 1856 1 "
- first 986
- last 1476
- origfirst 986
- origlast 1476
+ first frame
+ last frame
+ origfirst frame
+ origlast frame
  origset true
  colorspace default
  name IN1
