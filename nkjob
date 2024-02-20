@@ -83,41 +83,6 @@ def get_first_and_last_file(directory, filename):
         logger.error(f"Error checking for files in the directory {directory}: {e}. Exiting.")
         exit(1)
 
-
-# def count_files(url, extension):
-#     try:
-#         if os.path.exists(url):
-#             total_files = 0
-#             exr_files = [file for file in os.listdir(url) if file.endswith('.' + extension.lstrip('.').lower())]
-#             num_files = len(exr_files)
-#             total_files += num_files
-#             logger.info(f"Found {num_files} files in the directory {url} with extension {extension}")
-
-#             def count_files_in_directory(directory):
-#                 num_files = 0
-#                 for root, dirs, files in os.walk(directory):
-#                     for file in files:
-#                         if file.endswith('.' + extension.lstrip('.').lower()):
-#                             num_files += 1
-#                 return num_files
-
-#             for root, dirs, files in os.walk(url):
-#                 for dir in dirs:
-#                     dir_path = os.path.join(root, dir)
-#                     num_files = count_files_in_directory(dir_path)
-#                     total_files += num_files
-#                     logger.info(f"Found {num_files} files in the directory {dir_path} with extension {extension}")
-
-#             if total_files == 0:
-#                 logger.info("No files found with the specified extension. Exiting.")
-#                 exit(1)
-#         else:
-#             logger.info(f"{url} - directory not found")
-#             exit(1)
-
-#     except Exception as e:
-#         logger.info(f"No files found in the directory {url}")
-#         exit(1)
         
 def count_files(url, extension):
     try:
