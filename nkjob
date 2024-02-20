@@ -1,0 +1,318 @@
+#! /usr/bin/env python3 
+import re 
+import os
+import shutil
+import logging
+
+logger = logging.getLogger(__name__)
+formatter = logging.Formatter('%(asctime)s: %(message)s')
+# file_handler = logging.FileHandler('nujob.log')
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+# file_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+logger.setLevel(logging.INFO)
+
+
+
+######## Helper functions
+
+def generate_regex(input_text):
+    # Split the input text into parts
+    parts = re.split(r'(apk)', input_text)
+
+    # Generate the regex
+    regex = r'^'
+    for part in parts:
+        if part.isdigit():
+            regex += r'([0-9]+)'
+        elif part == 'apk':
+            regex += r'(apk)'
+        else:
+            regex += r'(.*)'
+    regex += r'$'
+
+    return regex
+
+
+def edit_nk_files(nk_file, kwargs):
+    with open(nk_file, 'r') as file:
+        content = file.read()
+        for search_string, replacement in kwargs.items():
+            content = content.replace(search_string, replacement)
+        
+    with open(nk_file, 'w') as file:
+        file.write(content)
+
+
+def rename_file(src, des):
+    try:
+        logger.info(f"Renaming {src} to {des}")
+        shutil.move(src, des)
+    except Exception as e:
+        logger.error(f"Error renaming {src} to {des}: {e}")
+        exit(1)
+
+
+def copy_file(source_file, destination_path):
+    try:
+        logger.info(f"Copying {source_file} to {destination_path}")
+        shutil.copy(source_file, destination_path)
+    except Exception as e:
+        logger.error(f"Error copying {source_file} to {destination_path}: {e}")
+        exit(1)
+
+
+def get_env_var(var_name):
+    var_value = os.getenv(var_name)
+    if not var_value:
+        logger.error(f"Environment variable {var_name} not set")
+        exit(1)
+    return var_value
+
+
+def get_first_and_last_file(directory, filename):
+    try:
+        files = os.listdir(directory)
+        filtered_files = [f for f in files if re.match(f"{filename}\\.[0-9]{{6}}\\.exr", f)]
+        sorted_files = sorted(filtered_files)
+        first_file = sorted_files[0] if sorted_files else None
+        last_file = sorted_files[-1] if sorted_files else None
+        return first_file, last_file
+    except Exception as e:
+        logger.error(f"Error checking for files in the directory {directory}: {e}. Exiting.")
+        exit(1)
+
+
+# def count_files(url, extension):
+#     try:
+#         if os.path.exists(url):
+#             total_files = 0
+#             exr_files = [file for file in os.listdir(url) if file.endswith('.' + extension.lstrip('.').lower())]
+#             num_files = len(exr_files)
+#             total_files += num_files
+#             logger.info(f"Found {num_files} files in the directory {url} with extension {extension}")
+
+#             def count_files_in_directory(directory):
+#                 num_files = 0
+#                 for root, dirs, files in os.walk(directory):
+#                     for file in files:
+#                         if file.endswith('.' + extension.lstrip('.').lower()):
+#                             num_files += 1
+#                 return num_files
+
+#             for root, dirs, files in os.walk(url):
+#                 for dir in dirs:
+#                     dir_path = os.path.join(root, dir)
+#                     num_files = count_files_in_directory(dir_path)
+#                     total_files += num_files
+#                     logger.info(f"Found {num_files} files in the directory {dir_path} with extension {extension}")
+
+#             if total_files == 0:
+#                 logger.info("No files found with the specified extension. Exiting.")
+#                 exit(1)
+#         else:
+#             logger.info(f"{url} - directory not found")
+#             exit(1)
+
+#     except Exception as e:
+#         logger.info(f"No files found in the directory {url}")
+#         exit(1)
+        
+def count_files(url, extension):
+    try:
+        if os.path.exists(url):
+            total_files = 0
+
+            def count_files_in_directory(directory):
+                exr_files = [file for file in os.listdir(directory) if file.endswith('.' + extension.lstrip('.').lower())]
+                num_files = len(exr_files)
+                logger.info(f"Found {num_files} files in the directory {directory} with extension {extension}")
+                return num_files
+
+            total_files += count_files_in_directory(url)
+
+            for root, dirs, files in os.walk(url):
+                for dir in dirs:
+                    dir_path = os.path.join(root, dir)
+                    total_files += count_files_in_directory(dir_path)
+
+            if total_files == 0:
+                logger.info("No files found with the specified extension. Exiting.")
+                exit(1)
+        else:
+            logger.info(f"{url} - directory not found")
+            exit(1)
+
+    except Exception as e:
+        logger.info(f"No files found in the directory {url}")
+        exit(1)
+
+def create(prefix, match, filename, source_file, url, extension, user_input, settings):
+
+    prefix_os = settings["prefix_os"]
+    suffix_nuke = settings["suffix_nuke"]
+    suffix_nk = settings["suffix_nk"]
+    source_file = settings["template_file"]
+
+    if prefix:
+        if isinstance(match, re.Match):
+            logger.info(f"-----------------Processing {'_'.join(match.groups())}-----------------")
+        else:
+            logger.info(f"-----------------Processing {match}-----------------")
+        # Construct the destination path based on the filename
+        # Construct the replacement_string based on the destination path
+        destination_path = f"{prefix_os}/{user_input}/{filename}/{suffix_nuke}"
+        nk_file = f"{destination_path}/{filename}{suffix_nk}"
+        replacement_string_no_ext = f"{url}{prefix}/{filename}/{filename}"
+        directory = f"{url}{prefix}/{filename}"
+       
+
+        if not os.path.exists(destination_path):
+            try:
+                logger.info(f"Creating directory {destination_path}")
+                # Create the directory if it does not exist - assume no job -c previously done - TEMP, TO BE REMOVED
+                os.makedirs(destination_path, exist_ok=True)
+            except Exception as e:
+                logger.error(f"Error creating directory {destination_path}: {e}")
+                exit(1)
+        else:
+            # For now, assume the directory can be cretaed if it does not exist
+            logger.info(f"Directory {destination_path} already exists")
+        
+        first_file, last_file = get_first_and_last_file(directory, filename)
+
+        if not first_file or not last_file:
+            logger.error(f"Error checking for files in the directory {directory}. Exiting.")
+            exit(1)
+        logger.info(f"First file: {first_file} and last file: {last_file} in the directory {directory}")
+
+        first_number = re.search(r'\.([0-9]+)\.exr', first_file)
+        last_number = re.search(r'\.([0-9]+)\.exr', last_file)
+        if first_number is not None:
+            first_number = first_number.group(1).lstrip('0')
+        if last_number is not None:
+            last_number = last_number.group(1).lstrip('0')
+
+        if not first_number or not last_number:
+            logger.error(f"Error extracting the frame numbers from the first and last files. Exiting.")
+            exit(1)
+
+
+        # Copy the .nk file to the destination path
+        copy_file(source_file, destination_path)
+
+        src = f"{destination_path}/{source_file}"
+        des = f"{destination_path}/{filename}{suffix_nk}"
+        
+        rename_file(src, des)
+       
+
+        footage_path = (str(replacement_string_no_ext) + ".######" + str('.' + extension.lstrip('.').lower()))
+        replacement_dict = {
+            "first frame": f"first {first_number}",
+            "last frame": f"last {last_number}",
+            "origfirst frame": f"origfirst {first_number}",
+            "origlast frame": f"origlast {last_number}",
+            "file path": f"file {footage_path}"
+        }
+        
+        try:
+            log_message = "Replacing "
+            for key, value in replacement_dict.items():
+                log_message += f"{key} with {value}, "
+            log_message = log_message.rstrip(", ")  # remove the trailing comma and space
+            logger.info(log_message)
+            edit_nk_files(nk_file, replacement_dict)
+        except Exception as e:
+            logger.error(f"Error editing the .nk file: {e}")
+            exit(1)
+
+######## End of helper functions
+
+######## Main function
+def main(settings):
+
+    prefix_os = settings["prefix_os"]
+    suffix_footage = settings["suffix_footage"]
+    source_file = settings["template_file"]
+    shotlist_file = settings["shotlist_file"]
+
+    # Prompt for user input
+    initial = input("--------Do you want create based on set job, or create manually with shotlist (J/m): ")
+    if initial.lower() in ["j", ""]:
+        user_input = get_env_var("JOB_CURRENT")
+        prefix = get_env_var("JOB_ASSET_TYPE")
+        match = get_env_var("JOB_ASSET_NAME")
+        entry = match
+
+        logger.info(f"Using JOB_CURRENT: {user_input}, JOB_ASSET_TYPE: {prefix}, JOB_ASSET_NAME: {match}")
+    else:
+        user_input = input("--------Enter your project name (e.g., kleks): ")
+
+
+    # make sure the template.nk exists in the current directory
+    if not os.path.exists(source_file):
+        logger.error(f"File {source_file} does not exist")
+        exit(1)
+
+    # Construct the URL based on the user input
+    search_string = f"{prefix_os}/{user_input}/{user_input}/{user_input}/{suffix_footage}"
+    choice = input(f"--------Do you want to use the default URL (Y/n) for footage? - {search_string} : ")
+
+    # Check if the user chose the default URL or wants to provide their own
+    if choice.lower() in ["y", ""]:
+        url = search_string
+    else:
+        url = input("--------Enter your own URL: ")
+
+    logger.info(f"Selected URL: {url}")
+
+    # Check if the URL ends with a forward slash
+    if url[-1] != '/':
+        url += '/'
+    # check if the url is valid and there are files in the directory
+    # give extension of the files to search for
+    extension = input("--------Enter the extension of the files to search for (exr is default): ")  
+    if extension == "":
+        extension = ".exr"
+
+    # Check if the URL exists and there are files in the directory
+    count_files(url, extension)
+
+    # Read data from a shot list file (assuming the file is named shotlist.txt)
+    if initial.lower() not in ["J", ""]:
+        try:
+            with open(shotlist_file, 'r') as file:
+                for entry in file:            
+                    regex = generate_regex(entry)
+                    match = re.match(regex, entry.strip())
+                    if match:
+                        # Extract the prefix and the filename using regex capture groups
+                        prefix = match.group(1)
+                        entry = entry.replace('\n', '') # remove the newline character from csv file
+                        if prefix:
+                            create(prefix, match, entry, source_file, url, extension, user_input, settings)
+                        
+        except FileNotFoundError:
+            logger.error("File shotlist.csv does not exist")
+            exit(1)
+    else:
+        create(prefix, match, entry, source_file, url, extension, user_input, settings)
+
+######## End of main function
+        
+
+######## Entrypoint
+if __name__ == "__main__":  
+    settings = {
+        "prefix_os": "./PROD/dev",
+        "suffix_nuke": "software/nuke/Scenes",
+        "suffix_footage": "edit/footage/",
+        "suffix_nk": "_comp_v000.nk",
+        "template_file": "template.nk",
+        "shotlist_file": "shotlist.csv"
+    }
+    logger.info('Starting the script')
+    main(settings)
+    logger.info('Ending the script')
