@@ -1,0 +1,456 @@
+#! /PROD/dev/sandbox/user/symek/ref/nuke/12.2v6/platform-linux/arch-x86_64/os-CentOS_Linux-7/Nuke12.2v6/libnuke-12.2.6.so -nx
+version 12.2 v6
+define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
+<layout version="1.0">
+    <window x="0" y="28" w="1920" h="1101" maximized="1" screen="0">
+        <splitter orientation="2">
+            <split size="974"/>
+            <dock id="" activePageId="Viewer.1">
+                <page id="Viewer.1"/>
+            </dock>
+            <split size="85"/>
+            <dock id="" activePageId="Curve Editor.1">
+                <page id="Curve Editor.1"/>
+                <page id="DopeSheet.1"/>
+            </dock>
+        </splitter>
+    </window>
+    <window x="1921" y="0" w="1914" h="1162" screen="1">
+        <splitter orientation="1">
+            <split size="1372"/>
+            <dock id="" activePageId="DAG.1" focus="true">
+                <page id="DAG.1"/>
+            </dock>
+            <split size="538"/>
+            <splitter orientation="2">
+                <split size="1162"/>
+                <dock id="" activePageId="Properties.1">
+                    <page id="Properties.1"/>
+                </dock>
+            </splitter>
+        </splitter>
+    </window>
+</layout>
+}
+Root {
+ inputs 0
+ name /home/skania/Videos/s000apk0000_comp.v000.nk
+ frame 1403
+ first_frame {{Read1.origfirst}}
+ last_frame {{Read1.origlast}}
+ lock_range true
+ fps 25
+ format "4448 1856 0 0 4448 1856 1 "
+ proxy_type scale
+ proxy_format "1024 778 0 0 1024 778 1 1K_Super_35(full-ap)"
+ colorManagement OCIO
+ OCIO_config aces_1.1
+ defaultViewerLUT "OCIO LUTs"
+ workingSpaceLUT scene_linear
+ monitorLut ACES/Rec.709
+ int8Lut color_picking
+ int16Lut texture_paint
+ logLut compositing_log
+ floatLut default
+}
+BackdropNode {
+ inputs 0
+ name BackdropNode1
+ tile_color 0x8e8e3800
+ label IN
+ note_font_size 42
+ xpos -131
+ ypos -87
+ bdwidth 327
+ bdheight 206
+}
+BackdropNode {
+ inputs 0
+ name BackdropNode2
+ tile_color 0x7171c600
+ label PRECOMP
+ note_font_size 42
+ xpos -799
+ ypos -118
+ bdwidth 338
+ bdheight 239
+}
+BackdropNode {
+ inputs 0
+ name BackdropNode3
+ tile_color 0xaaaaaa00
+ label OUT
+ note_font_size 42
+ xpos -68
+ ypos 1711
+ bdwidth 347
+ bdheight 372
+}
+Read {
+ inputs 0
+ file_type exr
+ file "\[join \[lrange \[split \[file dirname \[value root.name]] /] 0 end-3] /]/render/nuke/exr/\[lindex \[split \[file dirname \[value root.name]] /] 5]/\[lindex \[split \[file dirname \[value root.name]] /] 5].######.exr"
+ format {{{parent.Read1.format}}}
+ first {{parent.Read1.first}}
+ last {{parent.Read1.last}}
+ origfirst {{parent.Read1.origfirst}}
+ origlast {{parent.Read1.origlast}}
+ origset true
+ version 2
+ in_colorspace scene_linear
+ out_colorspace scene_linear
+ name Read2
+ xpos -10
+ ypos 1826
+ postage_stamp false
+}
+Group {
+ name HUMAN_BURN_IN
+ tile_color 0x3f0000
+ xpos -10
+ ypos 1941
+ addUserKnob {20 burn_in l Burn_in}
+ addUserKnob {26 INFO}
+ addUserKnob {1 Vendor_val l Vendor}
+ Vendor_val HUMAN
+ addUserKnob {26 ""}
+ addUserKnob {1 Comment_val l Commentary -STARTLINE}
+ addUserKnob {26 ""}
+ addUserKnob {1 Project_val l Project}
+ Project_val APK
+}
+ BackdropNode {
+  inputs 0
+  name BackdropNode5
+  tile_color 0x444444ff
+  note_font_size 42
+  xpos 90
+  ypos -211
+  bdwidth 826
+  bdheight 838
+ }
+ Read {
+  inputs 0
+  file_type png
+  file /PROD/dev/sandbox/ha/ha/tmp/human_white.png
+  format "1080 1080 0 0 1080 1080 1 "
+  origset true
+  in_colorspace scene_linear
+  out_colorspace scene_linear
+  name Read1
+  xpos 617
+  ypos -78
+  postage_stamp false
+ }
+ Premult {
+  name Premult1
+  xpos 617
+  ypos 3
+ }
+ Transform {
+  translate {420.2999878 480.2999878}
+  scale 0.06
+  center {540 540}
+  name Transform1
+  xpos 617
+  ypos 58
+ }
+ Constant {
+  inputs 0
+  channels rgb
+  format "1920 1080 0 0 1920 1080 1 HD_1080"
+  name Constant4
+  xpos 391
+  ypos -89
+ }
+ Text {
+  message "\[date %y]/\[date %m]/\[date %d]\n\[file tail \[value root.name]]"
+  font /usr/share/fonts/open-sans/OpenSans-Regular.ttf
+  size 30
+  leading 0.4
+  Transform 1
+  box {0 0 0 -18}
+  translate {40 74.5}
+  color 0.3
+  name DATE_FILE
+  xpos 391
+  ypos 13
+ }
+ Text {
+  message "VFX Supervisor: Szymon Kania"
+  font /usr/share/fonts/open-sans/OpenSans-Regular.ttf
+  size 25
+  leading 0.4
+  Transform 1
+  box {0 0 0 -18}
+  translate {40 1034.5}
+  color 0.3
+  name ARTIST
+  xpos 391
+  ypos 69
+  disable true
+ }
+ Text {
+  message "Vendor: \[knob Vendor_val]"
+  font /usr/share/fonts/open-sans/OpenSans-Regular.ttf
+  size 25
+  leading 0.4
+  Transform 1
+  box {0 0 0 -18}
+  translate {40 1000.5}
+  color 0.3
+  name VENDOR
+  selected true
+  xpos 391
+  ypos 125
+  disable true
+ }
+ Text {
+  message "\[knob Comment_val]"
+  font /usr/share/fonts/open-sans/OpenSans-Regular.ttf
+  size 25
+  leading 0.4
+  Transform 1
+  box {0 0 0 -18}
+  translate {40 967.5}
+  color 0.3
+  name COMMENTARY
+  xpos 391
+  ypos 181
+ }
+ Text {
+  message "\[format %04d \[frame]]\n"
+  font /usr/share/fonts/open-sans/OpenSans-Regular.ttf
+  size 60
+  Transform 1
+  translate {1747 45}
+  color 0.3
+  name FRAME
+  xpos 391
+  ypos 237
+ }
+ Text {
+  message "\[knob Project_val]\n"
+  font /usr/share/fonts/open-sans/OpenSans-Regular.ttf
+  size 60
+  Transform 1
+  translate {1785 991}
+  color 0.3
+  name Project
+  xpos 391
+  ypos 293
+ }
+ Grade {
+  white 2
+  name Grade1
+  xpos 490
+  ypos 293
+ }
+ Merge2 {
+  inputs 2
+  name Merge18
+  xpos 620
+  ypos 293
+ }
+ Dot {
+  name Dot44
+  xpos 654
+  ypos 349
+ }
+ Input {
+  inputs 0
+  name Input1
+  xpos 312
+  ypos 453
+ }
+ Reformat {
+  format "1920 1080 0 0 1920 1080 1 HD_1080"
+  resize fit
+  black_outside true
+  name Reformat1
+  xpos 452
+  ypos 447
+ }
+ Merge2 {
+  inputs 2
+  name Merge40
+  xpos 620
+  ypos 453
+ }
+ Crop {
+  box {0 0 1920 1080}
+  reformat true
+  crop false
+  name Crop1
+  xpos 620
+  ypos 509
+ }
+ Output {
+  name Output1
+  xpos 620
+  ypos 565
+ }
+push 0
+ Viewer {
+  inputs 2
+  frame_range 986-1086
+  fps 25
+  input_number 1
+  viewerProcess "sRGB (ACES)"
+  name Viewer1
+  xpos 840
+  ypos -9
+  hide_input true
+ }
+end_group
+Write {
+ file "\[join \[lrange \[split \[file dirname \[value root.name]] /] 0 end-3] /]/render/nuke/mov/\[lindex \[split \[lindex \[split \[value root.name] /] end] .] 0].mov"
+ colorspace "Output - Rec.709"
+ file_type mov
+ mov64_format "mov (QuickTime / MOV)"
+ mov64_codec appr
+ mov_prores_codec_profile "ProRes 4:2:2 10-bit"
+ mov64_pixel_format {{1} yuvj420p yuvj422p yuvj444p}
+ mov64_quality High
+ mov64_gop_size 12
+ mov64_b_frames 0
+ mov64_bitrate 20000
+ mov64_bitrate_tolerance 40000000
+ mov64_quality_min 2
+ mov64_quality_max 31
+ create_directories true
+ checkHashOnRead false
+ version 3
+ in_colorspace scene_linear
+ out_colorspace scene_linear
+ name Write1
+ xpos -10
+ ypos 2001
+}
+Read {
+ inputs 0
+ file_type exr
+ file path
+ format "4448 1856 0 0 4448 1856 1 "
+ first frame
+ last frame
+ origfirst frame
+ origlast frame
+ origset true
+ in_colorspace scene_linear
+ out_colorspace scene_linear
+ name Read1
+ xpos -10
+ ypos -31
+ postage_stamp false
+}
+set Nec629d00 [stack 0]
+Dot {
+ name Dot3
+ xpos -214
+ ypos -22
+}
+set Nec628f00 [stack 0]
+push $Nec628f00
+push 0
+Viewer {
+ inputs 3
+ frame_range 1248-1314
+ fps 25
+ viewerProcess "Rec.709 (ACES)"
+ name Viewer1
+ xpos -857
+ ypos 2009
+ hide_input true
+}
+push $Nec628f00
+Write {
+ file "\[join \[lrange \[split \[file dirname \[value root.name]] /] 0 end-3] /]/render/nuke/precomp/\[knob Precomp_val]/\[lindex \[split \[file dirname \[value root.name]] /] 5]_\[knob Precomp_val].%06d.\[knob Extension_val]"
+ colorspace "Output - Rec.709"
+ file_type jpeg
+ _jpeg_quality 0.5
+ create_directories true
+ checkHashOnRead false
+ version 19
+ in_colorspace scene_linear
+ out_colorspace scene_linear
+ name PRECOMP_NODE1
+ tile_color 0xe100efff
+ label "USE USER TAB!"
+ note_font "Verdana Bold"
+ xpos -393
+ ypos -43
+ addUserKnob {20 USER -STARTLINE}
+ addUserKnob {26 ""}
+ addUserKnob {1 Precomp_val l Precomp}
+ Precomp_val proxy
+ addUserKnob {26 ""}
+ addUserKnob {1 Extension_val l Extension}
+ Extension_val jpg
+ addUserKnob {41 file_type_1 l "file type" T PRECOMP_NODE1.file_type}
+ addUserKnob {41 colorspace_1 l colorspace T PRECOMP_NODE1.colorspace}
+ addUserKnob {41 compression_1 l compression T PRECOMP_NODE1.compression}
+ addUserKnob {26 ""}
+ addUserKnob {26 notes -STARTLINE T "FOR FINAL RENDERS AND PRECOMPS USE EXR (ZIP 16)\nACES2065-1"}
+ addUserKnob {26 ""}
+ addUserKnob {41 Render_1 l Render T PRECOMP_NODE1.Render}
+}
+Write {
+ inputs 0
+ file "\[join \[lrange \[split \[file dirname \[value root.name]] /] 0 end-3] /]/render/nuke/precomp/\[knob Precomp_val]/\[lindex \[split \[file dirname \[value root.name]] /] 5]_\[knob Precomp_val].%06d.\[knob Extension_val]"
+ colorspace default
+ file_type exr
+ first_part rgba
+ create_directories true
+ checkHashOnRead false
+ version 19
+ in_colorspace scene_linear
+ out_colorspace scene_linear
+ name PRECOMP_NODE
+ tile_color 0xe100efff
+ label "USE USER TAB!"
+ note_font "Verdana Bold"
+ xpos -663
+ ypos -25
+ addUserKnob {20 USER -STARTLINE}
+ addUserKnob {26 ""}
+ addUserKnob {1 Precomp_val l Precomp}
+ Precomp_val denoise
+ addUserKnob {26 ""}
+ addUserKnob {1 Extension_val l Extension}
+ Extension_val exr
+ addUserKnob {41 file_type_1 l "file type" T PRECOMP_NODE.file_type}
+ addUserKnob {41 colorspace_1 l colorspace T PRECOMP_NODE.colorspace}
+ addUserKnob {41 compression_1 l compression T PRECOMP_NODE.compression}
+ addUserKnob {26 ""}
+ addUserKnob {26 notes -STARTLINE T "FOR FINAL RENDERS AND PRECOMPS USE EXR (ZIP 16)\nACES2065-1"}
+ addUserKnob {26 ""}
+ addUserKnob {41 Render_1 l Render T PRECOMP_NODE.Render}
+}
+push $Nec629d00
+Dot {
+ name Dot1
+ xpos 24
+ ypos 1763
+}
+Dot {
+ name Dot2
+ xpos 183
+ ypos 1763
+}
+Write {
+ file "\[join \[lrange \[split \[file dirname \[value root.name]] /] 0 end-3] /]/render/nuke/exr/\[lindex \[split \[file dirname \[value root.name]] /] 5]/\[lindex \[split \[file dirname \[value root.name]] /] 5].######.exr"
+ colorspace default
+ file_type exr
+ first_part rgba
+ create_directories true
+ checkHashOnRead false
+ version 55
+ in_colorspace scene_linear
+ out_colorspace scene_linear
+ beforeRender "import nuke, os, re "
+ afterFrameRender "os.chmod(nuke.toNode('Write2').knob('file').evaluate(), 0o774)"
+ name Write2
+ xpos 149
+ ypos 2004
+}
