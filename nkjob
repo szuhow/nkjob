@@ -48,15 +48,6 @@ def edit_nk_files(nk_file, kwargs):
 
 
 
-def copy_file(source_file, destination_path):
-    try:
-        logger.info(f"Copying {source_file} to {destination_path}")
-        shutil.copy(source_file, destination_path)
-    except Exception as e:
-        logger.error(f"Error copying {source_file} to {destination_path}: {e}")
-        exit(1)
-
-
 def get_env_var(var_name):
     var_value = os.getenv(var_name)
     if not var_value:
