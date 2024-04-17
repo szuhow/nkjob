@@ -9,12 +9,6 @@ import subprocess
 import argparse
 
 logger = logging.getLogger(__name__)
-formatter = logging.Formatter('%(asctime)s: %(message)s')
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
-logger.setLevel(logging.INFO)
-
 
 def generate_regex(input_text):
     parts = re.split(r'(apk)', input_text)
@@ -27,21 +21,23 @@ def generate_regex(input_text):
         else:
             regex += r'(.*)'
     regex += r'$'
+    logger.debug("Generated regex from input '{}': {}".format(input_text, regex))
     return regex
 
-
 def create(source_template, settings, path):
-
     filename = os.path.basename(path.split(".")[0])
     destination_path = os.path.join(settings.prefix_os, settings.project, filename, settings.suffix_nuke)
     nk_file = os.path.join(destination_path, filename + "_comp_v000.nk")
-    
+    logger.debug("Destination path: {}".format(destination_path))
+    logger.debug("NK file: {}".format(nk_file))
+
     # FOR LOCAL TESTING
-    if not os.path.exists(destination_path):
-        try:
-            os.makedirs(destination_path)
-        except Exception as e:
-            exit(1)
+    # if not os.path.exists(destination_path):
+    #     try:
+    #         os.makedirs(destination_path)
+    #     except Exception as e:
+    #         logger.debug("Exception while creating directory: {}".format(e))
+    #         exit(1)
   
     try:
         original_file_name = os.path.basename(source_template)
@@ -65,7 +61,6 @@ def create(source_template, settings, path):
 
 
 def main():
-
     parser = argparse.ArgumentParser(description="Tool for creating Nuke templates")
     parser.add_argument('--project', required=True, help='Path to the video file')
     parser.add_argument('--shot', nargs='*', help='List of shots (default: %(default)s)')
@@ -75,8 +70,12 @@ def main():
     parser.add_argument('--template_file', default="template.nk", help='Template File (default: %(default)s)')
     parser.add_argument('--shotlist', default="shotlist.csv", help='Shotlist (default: %(default)s)')
     parser.add_argument('--asset', default="", help='Asset (default: %(default)s)')
+    parser.add_argument('--log_level', default='INFO', help='Log level (default: %(default)s)')
 
     args = parser.parse_args()
+
+    logging.basicConfig(level=args.log_level, format='%(asctime)s - %(levelname)s - %(message)s')
+    logger.debug("Arguments parsed: {}".format(args))
 
     prefix_os = args.prefix_os
     suffix_footage = args.suffix_footage
@@ -96,33 +95,38 @@ def main():
             entries = [line.strip() for line in file]
 
     if not os.path.exists(source_template):
-        logger.info("Source file does not exist: {}".format(source_template))
+        logger.error("Source file does not exist: {}".format(source_template))
         exit(1)
 
     if not os.path.exists(shotlist):
-        logger.info("Shotlist does not exist: {}".format(shotlist))
+        logger.error("Shotlist does not exist: {}".format(shotlist))
         exit(1)
 
     url = os.path.join(prefix_os, args.project, args.project, args.project, suffix_footage)
+    logger.debug("URL: {}".format(url))
 
     for entry in entries:
         entry = entry.strip()
+        logger.debug("Processing entry: {}".format(entry))
         match = re.match(generate_regex(entry), entry)
         if not match or not match.group(1):
+            logger.debug("No match found for entry: {}".format(entry))
             continue
 
         files = sorted(glob(os.path.join(url, match.group(1), entry, "*.exr")))
         if not files:
+            logger.debug("No files found for entry: {}".format(entry))
             continue
 
         padding = re.search(r'\.(\d+)\.', os.path.basename(files[0]))
         if not padding:
+            logger.debug("No padding found for entry: {}".format(entry))
             continue
 
         full_path = os.path.join(url, match.group(1), entry, "{}.%0{}d.exr".format(entry, len(padding.group(1))))
         log_msg = "".join(match.groups()) if isinstance(match, type(re.match("", ""))) else match
-        logger.info("-----------------Processing {}-----------------".format(log_msg))
         create(source_template=source_template, settings=args, path=full_path)
+        logger.info("-----------------Finished processing {}-----------------".format(log_msg))
 
 
 if __name__ == "__main__":  

@@ -600,10 +600,10 @@ Read {
  file_type exr
  file path
  format "4448 1856 0 0 4448 1856 1 "
- first frame
- last frame
- origfirst frame
- origlast frame
+ first 1
+ last 1
+ origfirst 1
+ origlast 1
  origset true
  colorspace default
  name IN1
