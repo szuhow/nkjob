@@ -21,7 +21,6 @@ def generate_regex(input_text):
         else:
             regex += r'(.*)'
     regex += r'$'
-    logger.debug("Generated regex from input '{}': {}".format(input_text, regex))
     return regex
 
 def create(source_template, settings, path):
@@ -32,12 +31,12 @@ def create(source_template, settings, path):
     logger.debug("NK file: {}".format(nk_file))
 
     # FOR LOCAL TESTING
-    # if not os.path.exists(destination_path):
-    #     try:
-    #         os.makedirs(destination_path)
-    #     except Exception as e:
-    #         logger.debug("Exception while creating directory: {}".format(e))
-    #         exit(1)
+    if not os.path.exists(destination_path):
+        try:
+            os.makedirs(destination_path)
+        except Exception as e:
+            logger.debug("Exception while creating directory: {}".format(e))
+            exit(1)
   
     try:
         original_file_name = os.path.basename(source_template)
