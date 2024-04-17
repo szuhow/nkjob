@@ -1,4 +1,4 @@
-#nkjob
+# nkjob
 
 This script is a tool for creating Nuke templates.
 
