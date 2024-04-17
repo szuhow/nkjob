@@ -30,28 +30,28 @@ def generate_regex(input_text):
     return regex
 
 
-def create(source_template, user_input, settings, path):
+def create(source_template, settings, path):
 
     filename = os.path.basename(path.split(".")[0])
-    destination_path = os.path.join(settings["prefix_os"], user_input, filename, settings["suffix_nuke"])
+    destination_path = os.path.join(settings.prefix_os, settings.project, filename, settings.suffix_nuke)
     nk_file = os.path.join(destination_path, filename + "_comp_v000.nk")
     
     # FOR LOCAL TESTING
-    # if not os.path.exists(destination_path):
-    #     try:
-    #         os.makedirs(destination_path)
-    #     except Exception as e:
-    #         exit(1)
+    if not os.path.exists(destination_path):
+        try:
+            os.makedirs(destination_path)
+        except Exception as e:
+            exit(1)
   
-
     try:
-        shutil.copy(source_template , destination_path)
-        src = os.path.join(destination_path, source_template )
+        original_file_name = os.path.basename(source_template)
+        shutil.copy(original_file_name, destination_path)
+        src = os.path.join(destination_path, original_file_name)
         des = os.path.join(destination_path, filename + "_comp_v000.nk")
         shutil.move(src, des)
     except Exception as e:
         logger.error("Error copying {} to {}: {}".format(source_template , destination_path, e))
-        exit(1)  
+        exit(1)
 
     try:
         with open(nk_file, 'r+') as file:
@@ -66,29 +66,34 @@ def create(source_template, user_input, settings, path):
 
 def main():
 
-    settings = {
-        "prefix_os": "/home/rszulinski/git/nkjob/PROD/dev",
-        "suffix_nuke": "software/nuke/Scenes",
-        "suffix_footage": "edit/footage/",
-        "template_file": "template.nk",
-        "shotlist": "shotlist.csv"
-    }
-
     parser = argparse.ArgumentParser(description="Tool for creating Nuke templates")
     parser.add_argument('--project', required=True, help='Path to the video file')
+    parser.add_argument('--shot', nargs='*', help='List of shots (default: %(default)s)')
+    parser.add_argument('--prefix_os', default="/home/rszulinski/git/nkjob/PROD/dev", help='Prefix OS (default: %(default)s)')
+    parser.add_argument('--suffix_nuke', default="software/nuke/Scenes", help='Suffix Nuke (default: %(default)s)')
+    parser.add_argument('--suffix_footage', default="edit/footage/", help='Suffix Footage (default: %(default)s)')
+    parser.add_argument('--template_file', default="template.nk", help='Template File (default: %(default)s)')
+    parser.add_argument('--shotlist', default="shotlist.csv", help='Shotlist (default: %(default)s)')
+    parser.add_argument('--asset', default="", help='Asset (default: %(default)s)')
 
-    for key in settings.keys():
-        parser.add_argument('--{}'.format(key))
     args = parser.parse_args()
 
-    for key in settings.keys():
-        if getattr(args, key) is not None:
-            settings[key] = getattr(args, key)
+    prefix_os = args.prefix_os
+    suffix_footage = args.suffix_footage
+    source_template = args.template_file
+    shotlist = args.shotlist
 
-    prefix_os = settings["prefix_os"]
-    suffix_footage = settings["suffix_footage"]
-    source_template = settings["template_file"]
-    shotlist = settings["shotlist"]
+    entries = []
+    if args.shot and args.asset is not None:
+        if isinstance(args.shot, list):
+            for shot in args.shot:
+                entries.append(args.asset + shot)
+        else:
+            entries.append(args.asset + args.shot)
+
+    if not entries:
+        with open(shotlist, 'r') as file:
+            entries = [line.strip() for line in file]
 
     if not os.path.exists(source_template):
         logger.info("Source file does not exist: {}".format(source_template))
@@ -100,25 +105,24 @@ def main():
 
     url = os.path.join(prefix_os, args.project, args.project, args.project, suffix_footage)
 
-    with open(shotlist, 'r') as file:
-        for entry in file:
-            entry = entry.strip()
-            match = re.match(generate_regex(entry), entry)
-            if not match or not match.group(1):
-                continue
+    for entry in entries:
+        entry = entry.strip()
+        match = re.match(generate_regex(entry), entry)
+        if not match or not match.group(1):
+            continue
 
-            files = sorted(glob(os.path.join(url, match.group(1), entry, "*.exr")))
-            if not files:
-                continue
+        files = sorted(glob(os.path.join(url, match.group(1), entry, "*.exr")))
+        if not files:
+            continue
 
-            padding = re.search(r'\.(\d+)\.', os.path.basename(files[0]))
-            if not padding:
-                continue
+        padding = re.search(r'\.(\d+)\.', os.path.basename(files[0]))
+        if not padding:
+            continue
 
-            full_path = os.path.join(url, match.group(1), entry, "{}.%0{}d.exr".format(entry, len(padding.group(1))))
-            log_msg = "_".join(match.groups()) if isinstance(match, type(re.match("", ""))) else match
-            logger.info("-----------------Processing {}-----------------".format(log_msg))
-            create(source_template=source_template, user_input=args.project, settings=settings, path=full_path)
+        full_path = os.path.join(url, match.group(1), entry, "{}.%0{}d.exr".format(entry, len(padding.group(1))))
+        log_msg = "".join(match.groups()) if isinstance(match, type(re.match("", ""))) else match
+        logger.info("-----------------Processing {}-----------------".format(log_msg))
+        create(source_template=source_template, settings=args, path=full_path)
 
 
 if __name__ == "__main__":  
