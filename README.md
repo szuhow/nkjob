@@ -1,4 +1,5 @@
-"""
+#nkjob
+
 This script is a tool for creating Nuke templates.
 
 Functions:
@@ -18,4 +19,3 @@ The script accepts the following command line arguments:
 - --log_level: The log level. The default is 'INFO'.
 
 The script logs debug messages for each step of the process, including the generation of the regex, the processing of each entry, and the creation of the Nuke template.
-"""
