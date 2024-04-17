@@ -31,36 +31,29 @@ def generate_regex(input_text):
 
 
 def create(source_template, settings, path):
-
-    filename = os.path.basename(path.split(".")[0])
+    filename = os.path.splitext(os.path.basename(path))[0]
     destination_path = os.path.join(settings.prefix_os, settings.project, filename, settings.suffix_nuke)
-    nk_file = os.path.join(destination_path, filename + "_comp_v000.nk")
-    
-    # FOR LOCAL TESTING
-    if not os.path.exists(destination_path):
-        try:
-            os.makedirs(destination_path)
-        except Exception as e:
-            exit(1)
-  
+    nk_file = os.path.join(destination_path, f"{filename}_comp_v000.nk")
+
+    # LOCAL TESTING
+    # os.makedirs(destination_path, exist_ok=True) 
+
     try:
         original_file_name = os.path.basename(source_template)
-        shutil.copy(original_file_name, destination_path)
-        src = os.path.join(destination_path, original_file_name)
-        des = os.path.join(destination_path, filename + "_comp_v000.nk")
-        shutil.move(src, des)
+        shutil.copy(source_template, destination_path)
+        shutil.move(os.path.join(destination_path, original_file_name), nk_file)
     except Exception as e:
-        logger.error("Error copying {} to {}: {}".format(source_template , destination_path, e))
+        logger.error(f"Error copying {source_template} to {destination_path}: {e}")
         exit(1)
 
     try:
         with open(nk_file, 'r+') as file:
-            content = file.read().replace("file path", "file {}".format(path))
+            content = file.read().replace("file path", f"file {path}")
             file.seek(0)
             file.write(content)
             file.truncate()
     except Exception as e:
-        logger.error("Error editing the .nk file: {}".format(e))
+        logger.error(f"Error editing the .nk file: {e}")
         exit(1)
 
 
